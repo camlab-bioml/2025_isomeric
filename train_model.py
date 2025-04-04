@@ -417,15 +417,6 @@ def get_data_tensor(adata, lik="gaussian"):
         data_tensor = torch.tensor(adata_norm, dtype=torch.float32)
     return data_tensor
 
-def get_git_revision():
-    base_path = '/ddn_exa/campbell/aselega/Projects/2023-cna-effects'
-    git_dir = pathlib.Path(base_path) / '.git'
-    with (git_dir / 'HEAD').open('r') as head:
-        ref = head.readline().split(' ')[-1].strip()
-
-    with (git_dir / ref).open('r') as git_hash:
-        return git_hash.readline().strip()
-
 def normalize_sc_data(adata, lik="gaussian", target_sum=1e4):
     if lik == "gaussian":
         sc.pp.normalize_total(adata, target_sum=target_sum)
@@ -590,9 +581,8 @@ def main(cohort, label_level, lik, cohort_encoding, scheduler, n_layers, negent_
                 betas=betas,
                 n_layers=n_layers,
                 negent_weight=negent_weight,
-                lr=lr,
-                commit=get_git_revision())
-    wandb.init(dir="/ddn_exa/campbell/aselega/data-cna-effects-project/", project=project_name, config=config)
+                lr=lr)
+    wandb.init(project=project_name, config=config)
     torch.manual_seed(seed)
     np.random.seed(seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -628,15 +618,6 @@ def main(cohort, label_level, lik, cohort_encoding, scheduler, n_layers, negent_
     print("Finished training.")
     if nans_present:
         print("NaN train loss.")
-    today = str(date.today())
-    if wandb.run.sweep_id is not None:
-        dir_name = wandb.run.project + "-" + wandb.run.sweep_id 
-        dir_path = pathlib.Path(f"/ddn_exa/campbell/share/datasets/ISOMERIC_2024/data-cna-effects-project/models_pt/{dir_name}/")
-        dir_path.mkdir(parents=True, exist_ok=True)
-    else:
-        dir_path = pathlib.Path(f"/ddn_exa/campbell/share/datasets/ISOMERIC_2024/data-cna-effects-project/models_pt/")
-    filepath = dir_path / f"{today}-{m}-{project_name}-{wandb.run.name}.pt"
-    torch.save(model.state_dict(), filepath)
 
     wandb.finish()
 
