@@ -1,23 +1,17 @@
 import torch
 from torch import optim
 from torch.nn import functional as F
-import matplotlib.pyplot as plt
 import numpy as np
 import scanpy as sc
 from torch.utils.data import TensorDataset, DataLoader, random_split
 from torch.distributions.normal import Normal
 from torch.distributions.negative_binomial import NegativeBinomial
 import wandb
-import seaborn as sns
-import pathlib
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn import preprocessing
-from datetime import date
 from vae_models import VAE, CSVAE
-import umap
 from sklearn.preprocessing import LabelEncoder
-import matplotlib as mpl
 from torch.nn.functional import gaussian_nll_loss
 
 examples_processed = 0
@@ -435,14 +429,13 @@ def get_subsets(values, indices):
     return values  
 
 def set_dataset_params(cohort, label_level):
-    path = "/ddn_exa/campbell/share/datasets/ISOMERIC_2024/data-cna-effects-project/"
     if cohort == "peng":
-        adata = sc.read_h5ad(path + "peng/" + "pdac-peng-tumour-cells-protein-coding-no-ribo-mito.h5ad")
+        adata = sc.read_h5ad("peng/" + "pdac-peng-tumour-cells-protein-coding-no-ribo-mito.h5ad")
         
         if label_level == "band":
-            labels = pd.read_csv(path + "peng/" + "pdac-peng-tumour-cells-band-labels.csv", index_col=0)
+            labels = pd.read_csv("peng/" + "pdac-peng-tumour-cells-band-labels.csv", index_col=0)
         elif label_level == "arm":
-            labels = pd.read_csv(path + "peng/" + "pdac-peng-tumour-cells-arm-labels.csv", index_col=0)
+            labels = pd.read_csv("peng/" + "pdac-peng-tumour-cells-arm-labels.csv", index_col=0)
         else:
             assert False
 
@@ -451,12 +444,12 @@ def set_dataset_params(cohort, label_level):
         project_name = "peng-tumour"
 
     elif cohort == "zhou":
-        adata = sc.read_h5ad(path + "zhou/" + "pdac-zhou-tumour-cells-protein-coding-no-ribo-mito.h5ad")
+        adata = sc.read_h5ad("zhou/" + "pdac-zhou-tumour-cells-protein-coding-no-ribo-mito.h5ad")
         
         if label_level == "band":
-            labels = pd.read_csv(path + "zhou/" + "pdac-zhou-tumour-cells-band-labels.csv", index_col=0)
+            labels = pd.read_csv("zhou/" + "pdac-zhou-tumour-cells-band-labels.csv", index_col=0)
         elif label_level == "arm":
-            labels = pd.read_csv(path + "zhou/" + "pdac-zhou-tumour-cells-arm-labels.csv", index_col=0)
+            labels = pd.read_csv("zhou/" + "pdac-zhou-tumour-cells-arm-labels.csv", index_col=0)
         else:
             assert False
 
@@ -465,12 +458,12 @@ def set_dataset_params(cohort, label_level):
         project_name = "zhou"
 
     elif cohort == "spectrum":
-        adata = sc.read_h5ad(path + "spectrum/" + "spectrum-matched-labels-train-val-no-ribo-mito-chrom-annotated.h5ad")
+        adata = sc.read_h5ad("spectrum/" + "spectrum-matched-labels-train-val-no-ribo-mito-chrom-annotated.h5ad")
 
         if label_level == "band":
-            labels = pd.read_csv(path + "spectrum/" + "spectrum-cont-labels-3-classes-train-val-tumour-bands.csv", index_col=0)
+            labels = pd.read_csv("spectrum/" + "spectrum-cont-labels-3-classes-train-val-tumour-bands.csv", index_col=0)
         elif label_level == "arm":
-            labels = pd.read_csv(path + "spectrum/" + "spectrum-cont-labels-3-classes-train-val-tumour.csv", index_col=0)
+            labels = pd.read_csv("spectrum/" + "spectrum-cont-labels-3-classes-train-val-tumour.csv", index_col=0)
         else:
             assert False
 
@@ -480,12 +473,12 @@ def set_dataset_params(cohort, label_level):
         project_name = "spectrum_ov"
 
     elif cohort == "all-lung":
-        adata = sc.read_h5ad("/ddn_exa/campbell/share/datasets/3CA-datasets/Lung/Lung_adata_filtered_tumour_only_nonzero_genes_train_val_no_maynard.h5ad")
+        adata = sc.read_h5ad("3CA-datasets/Lung/Lung_adata_filtered_tumour_only_nonzero_genes_train_val_no_maynard.h5ad")
 
         if label_level == "band":
-            labels = pd.read_csv("/ddn_exa/campbell/share/datasets/3CA-datasets/Lung/LungCNA_labels_tumour_only_train_val_no_maynard_bands.csv", index_col=0)
+            labels = pd.read_csv("3CA-datasets/Lung/LungCNA_labels_tumour_only_train_val_no_maynard_bands.csv", index_col=0)
         elif label_level == "arm":
-            labels = pd.read_csv("/ddn_exa/campbell/share/datasets/3CA-datasets/Lung/LungCNA_labels_tumour_only_train_val_no_maynard_tf.csv", index_col=0)
+            labels = pd.read_csv("3CA-datasets/Lung/LungCNA_labels_tumour_only_train_val_no_maynard_tf.csv", index_col=0)
         else:
             assert False
 
@@ -495,12 +488,12 @@ def set_dataset_params(cohort, label_level):
         project_name = "lung"
 
     elif cohort == "all-breast":
-        adata = sc.read_h5ad("/ddn_exa/campbell/share/datasets/3CA-datasets/Breast/Breast_adata_filtered_tumour_only_nonzero_genes_train_val.h5ad")
+        adata = sc.read_h5ad("3CA-datasets/Breast/Breast_adata_filtered_tumour_only_nonzero_genes_train_val.h5ad")
 
         if label_level == "band":
-            labels = pd.read_csv("/ddn_exa/campbell/share/datasets/3CA-datasets/Breast/BreastCNA_labels_tumour_only_train_val_bands.csv", index_col=0)
+            labels = pd.read_csv("3CA-datasets/Breast/BreastCNA_labels_tumour_only_train_val_bands.csv", index_col=0)
         elif label_level == "arm":
-            labels = pd.read_csv("/ddn_exa/campbell/share/datasets/3CA-datasets/Breast/BreastCNA_labels_tumour_only_train_val_tf.csv", index_col=0)
+            labels = pd.read_csv("3CA-datasets/Breast/BreastCNA_labels_tumour_only_train_val_tf.csv", index_col=0)
         else:
             assert False
 
